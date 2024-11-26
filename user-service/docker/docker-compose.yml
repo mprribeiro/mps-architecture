@@ -1,0 +1,71 @@
+services:
+  userdb:
+    image: postgres
+    container_name: userdb
+    restart: always
+    environment:
+      POSTGRES_DB: "mps-user"
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "user1234"
+    ports:
+      - "5432:5432"
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    depends_on:
+      - userdb
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user@localhost.com
+      PGADMIN_DEFAULT_PASSWORD: user1234
+    ports:
+      - "80:80"
+    volumes:
+      - ./data/pgadmin:/var/lib/pgadmin
+  flyway-user:
+    image: flyway/flyway
+    command: -url=jdbc:postgresql://userdb:5432/mps-user -user=user -password=user1234 -connectRetries=60 migrate
+    depends_on:
+      - userdb
+    volumes:
+      - ./data/sql/user:/flyway/sql
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+  coursedb:
+    image: postgres
+    container_name: coursedb
+    restart: always
+    environment:
+      POSTGRES_DB: "mps-course"
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "user1234"
+    ports:
+      - "5433:5432"
+  flyway-course:
+    image: flyway/flyway
+    command: -url=jdbc:postgresql://coursedb:5432/mps-course -user=user -password=user1234 -connectRetries=60 migrate
+    depends_on:
+      - coursedb
+    volumes:
+      - ./data/sql/course:/flyway/sql
+  notificationdb:
+    image: postgres
+    container_name: notificationdb
+    restart: always
+    environment:
+      POSTGRES_DB: "mps-notification"
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "user1234"
+    ports:
+      - "5434:5432"
+
+networks:
+  default:
+    name: local-network

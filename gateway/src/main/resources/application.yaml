@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: mps-gateway
+  config:
+    import: "optional:configserver:"
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://MPS-USER-SERVICE
+          predicates:
+            - Path=/mps-user/**
+        - id: course-service
+          uri: lb://MPS-COURSE-SERVICE
+          predicates:
+            - Path=/mps-course/**
+        - id: notification-service
+          uri: lb://MPS-NOTIFICATION-SERVICE
+          predicates:
+            - Path=/mps-notification/**
+
+mps:
+  serviceRegistry:
+    username: serviceregistry
+    password: 'mps1234'
+  auth:
+    jwtSecret: McQfTjWnZr4u7x!A%D*G-KaPdRgUkXp2s5v8y/B?E(H+MbQeThVmYq3t6w9z$C&F
+    jwtExpirationMs: 14400000
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: 'http://${mps.serviceRegistry.username}:${mps.serviceRegistry.password}@localhost:8761/eureka'
+  instance:
+    hostname: localhost
